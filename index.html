@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карбон — Выберите материал</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-sans:    'Inter', sans-serif;
+            --transition-dur: 1.3s;
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── FULL-PAGE TRANSITION OVERLAY ── */
+        #pageOut {
+    position: fixed; inset: 0; z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+
+    backdrop-filter: blur(0px);
+    transform: scale(1);
+
+    transition:
+        opacity 1.8s cubic-bezier(.16,1,.3,1),
+        backdrop-filter 1.8s ease,
+        transform 1.8s ease;
+    }
+
+    #pageOut.visible {
+      opacity: 1;
+      backdrop-filter: blur(10px);
+      transform: scale(1.03);
+      pointer-events: all;
+    }
+
+        /* ── SPLIT WRAPPER ── */
+        .split {
+            position: relative;
+            display: flex;
+            width: 100%; height: 100%;
+        }
+
+        /* ── EACH PANEL ── */
+        .panel {
+            position: relative;
+            width: 50%; height: 100%;
+            overflow: hidden;
+            cursor: pointer;
+            transition: width var(--transition-dur) cubic-bezier(.77,0,.18,1);
+        }
+        .split:has(.panel--dark:hover)  .panel--dark  { width: 62%; }
+        .split:has(.panel--dark:hover)  .panel--light { width: 38%; }
+        .split:has(.panel--light:hover) .panel--light { width: 62%; }
+        .split:has(.panel--light:hover) .panel--dark  { width: 38%; }
+
+        /* Background textures */
+        .panel--dark {
+            background-color: #060608;
+            background-image:
+                radial-gradient(circle at 30% 30%, rgba(0,240,255,.06) 0%, transparent 55%);
+            background-size: cover;
+            background-position: center;
+        }
+        .panel--light {
+            background-color: #f0f1f5;
+            background-image:
+                radial-gradient(circle at 70% 30%, rgba(26,107,189,.08) 0%, transparent 55%);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Photo overlay on hover */
+        .panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.9s cubic-bezier(.16,1,.3,1);
+        }
+        .panel--dark::before  { background-image: url('hero-carbon.jpg'); }
+        .panel--light::before { background-image: url('beliy.jpg'); }
+
+        .split:has(.panel--dark:hover)  .panel--dark::before  { opacity: 1; }
+        .split:has(.panel--light:hover) .panel--light::before { opacity: 1; }
+
+        .panel--light::before {
+          opacity: 0;
+        }
+
+        /* Gradient vignette toward center */
+        .panel--dark::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(to right, transparent 50%, rgba(0,0,0,.55) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .panel--light::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(to left, transparent 50%, rgba(240,241,245,.55) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* ── DIVIDER BLOCK ── */
+        .divider {
+            position: absolute;
+            left: 50%; top: 0;
+            width: 2px; height: 100%;
+            transform: translateX(-50%);
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(255,255,255,.35) 20%,
+                rgba(255,255,255,.6) 50%,
+                rgba(255,255,255,.35) 80%,
+                transparent 100%
+            );
+            z-index: 10;
+            pointer-events: none;
+            transition: left var(--transition-dur) cubic-bezier(.77,0,.18,1),
+                        opacity .4s ease;
+        }
+        .split:has(.panel--dark:hover)  .divider { left: 62%; }
+        .split:has(.panel--light:hover) .divider { left: 38%; }
+
+        /* Divider label block — replaces orb */
+        .divider-label {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        /* Vertical line segments above/below the pill */
+        .divider-label::before,
+        .divider-label::after {
+            content: '';
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(255,255,255,.55), transparent);
+            display: block;
+        }
+        .divider-label::after {
+            background: linear-gradient(to top, rgba(255,255,255,.55), transparent);
+        }
+
+        .divider-pill {
+            background: rgba(12, 12, 20, 0.72);
+            border: 1px solid rgba(255,255,255,.22);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 40px;
+            padding: 14px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
+            transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s ease;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        .split:hover .divider-pill {
+            transform: scale(1.04);
+            box-shadow: 0 8px 48px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1) inset;
+        }
+
+        .divider-pill-label {
+            font-family: var(--font-display);
+            font-size: .62rem;
+            font-weight: 600;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.4);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        .divider-pill-text {
+            font-family: var(--font-display);
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.85);
+            white-space: nowrap;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        /* ── CENTER CARBON TITLE ── */
+        .center-box {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity .45s ease, transform .5s cubic-bezier(.16,1,.3,1);
+        }
+
+        .center-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            transition: color .4s ease, text-shadow .4s ease;
+
+            /* pill-style background matching divider */
+            background: rgba(12, 12, 20, 0.68);
+            border: 1px solid rgba(255,255,255,.18);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 12px 28px;
+            color: rgba(255,255,255,.9);
+            text-shadow: 0 2px 20px rgba(0,0,0,.7);
+            box-shadow: 0 4px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.06) inset;
+            transition: transform .5s cubic-bezier(.16,1,.3,1),
+                        background .4s ease,
+                        border-color .4s ease,
+                        color .4s ease,
+                        text-shadow .4s ease,
+                        box-shadow .4s ease;
+        }
+
+        /* On dark hover → shift label left, tint dark */
+        .split:has(.panel--dark:hover) .center-box {
+            transform: translate(-50%, -50%) translateX(-68px);
+        }
+        .split:has(.panel--dark:hover) .center-title {
+            color: #ffffff;
+            text-shadow: 0 0 28px rgba(0,0,0,.9);
+            background: rgba(6, 6, 10, 0.85);
+            border-color: rgba(255,255,255,.22);
+            box-shadow: 0 6px 36px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08) inset;
+        }
+
+        /* On light hover → shift label right, tint light */
+        .split:has(.panel--light:hover) .center-box {
+            transform: translate(-50%, -50%) translateX(68px);
+        }
+        .split:has(.panel--light:hover) .center-title {
+            color: #0d0e18;
+            text-shadow: 0 2px 12px rgba(0,0,0,.15);
+            background: rgba(240, 241, 250, 0.88);
+            border-color: rgba(26,107,189,.28);
+            box-shadow: 0 6px 36px rgba(26,107,189,.18), 0 0 0 1px rgba(26,107,189,.08) inset;
+        }
+
+        .center-arrow {
+            margin-top: 14px;
+            display: flex; gap: 32px; justify-content: center;
+            color: rgba(255,255,255,.4);
+            font-size: 1.2rem;
+            animation: nudge 2s ease-in-out infinite;
+            transition: color .4s ease;
+        }
+        .split:has(.panel--light:hover) .center-arrow {
+            color: rgba(13, 14, 24, .35);
+        }
+        @keyframes nudge {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(4px); }
+        }
+
+        /* Carbon prefix fade in/out */
+        .carbon-prefix {
+            display: inline-block;
+            overflow: hidden;
+            max-width: 0;
+            opacity: 0;
+            white-space: nowrap;
+            transition: max-width .55s cubic-bezier(.16,1,.3,1),
+                        opacity .45s ease;
+            vertical-align: baseline;
+        }
+        /* Show dark prefix (Чёрный) when dark panel hovered */
+        .split:has(.panel--dark:hover) .carbon-prefix--dark {
+            max-width: 160px;
+            opacity: 1;
+        }
+        /* Show light prefix (Белый) when light panel hovered */
+        .split:has(.panel--light:hover) .carbon-prefix--light {
+            max-width: 120px;
+            opacity: 1;
+        }
+
+
+        .panel-content {
+            position: absolute; inset: 0;
+            z-index: 6;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 0 0 72px 64px;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity .55s ease .1s, transform .55s cubic-bezier(.16,1,.3,1) .1s;
+        }
+        .panel--light .panel-content { padding: 0 64px 72px 0; align-items: flex-end; text-align: right; }
+        .panel:hover .panel-content { opacity: 1; transform: translateY(0); }
+
+        .panel-tag {
+            width: fit-content;
+            font-family: var(--font-display);
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: inline-block;
+        }
+        .panel--dark  .panel-tag { color: #00f0ff; background: rgba(0,240,255,.10); border: 1.5px solid rgba(0,240,255,.40); }
+        .panel--light .panel-tag { color: #1a6bbd; background: rgba(26,107,189,.10); border: 1.5px solid rgba(26,107,189,.55); }
+
+        .panel-title {
+            font-family: var(--font-display);
+            font-size: 4.2rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: .95;
+            margin-bottom: 20px;
+        }
+        .panel--dark  .panel-title { color: #fff; }
+        .panel--light .panel-title { color: #0d0e18; }
+
+        .panel-desc {
+            font-size: .95rem;
+            line-height: 1.65;
+            max-width: 360px;
+            margin-bottom: 32px;
+        }
+        .panel--dark  .panel-desc { color: rgba(255,255,255,.6); }
+        .panel--light .panel-desc { color: rgba(10,10,30,.55); margin-left: auto; }
+
+        .panel-cta {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: .95rem;
+            text-decoration: none;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .panel-cta:hover { transform: translateY(-3px); }
+        .panel--dark  .panel-cta { background: #00f0ff; color: #000; box-shadow: 0 0 0 rgba(0,240,255,0); }
+        .panel--dark  .panel-cta:hover { box-shadow: 0 10px 30px rgba(0,240,255,.4); }
+        .panel--light .panel-cta { background: #1a6bbd; color: #fff; box-shadow: 0 0 0 rgba(26,107,189,0); }
+        .panel--light .panel-cta:hover { box-shadow: 0 10px 30px rgba(26,107,189,.4); }
+
+        .panel-cta-arrow {
+            transition: transform .25s ease;
+        }
+        .panel-cta:hover .panel-cta-arrow { transform: translateX(4px); }
+
+        /* ── CREATOR CREDIT (center-bottom) ── */
+        .creator {
+            position: absolute;
+            bottom: 28px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            text-align: center;
+            pointer-events: none;
+        }
+        .creator-name {
+            font-family: var(--font-display);
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.35);
+            text-shadow: 0 1px 10px rgba(0,0,0,.5);
+        }
+        .creator-sub {
+            font-size: .68rem;
+            color: rgba(255,255,255,.2);
+            margin-top: 3px;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 8px rgba(0,0,0,.4);
+        }
+
+        /* ── AMBIENT PARTICLES (pure CSS) ── */
+        .particles {
+            position: absolute; inset: 0;
+            pointer-events: none; z-index: 4; overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: drift linear infinite;
+            opacity: 0;
+        }
+        .panel--dark  .particle { background: rgba(0,240,255,.6); }
+        .panel--light .particle { background: rgba(26,107,189,.5); }
+
+        @keyframes drift {
+            0%   { transform: translateY(0) translateX(0) scale(0); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: .6; }
+            100% { transform: translateY(-120px) translateX(var(--dx, 20px)) scale(1); opacity: 0; }
+        }
+
+        /* ── PAGE ENTRY ANIMATION ── */
+        .panel--dark {
+            animation: slideInLeft 1.2s cubic-bezier(.77,0,.18,1) both;
+        }
+        .panel--light {
+            animation: slideInRight 1.2s cubic-bezier(.77,0,.18,1) both;
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-40px); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(40px); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+        .center-box {
+            animation: fadeUp 1.4s cubic-bezier(.16,1,.3,1) .5s both;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translate(-50%, -44%); }
+            to   { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        .creator {
+            animation: fadeIn 1.6s ease 1s both;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .split { flex-direction: column; }
+            .panel { width: 100% !important; height: 50%; }
+            .split:has(.panel--dark:hover)  .panel--dark  { height: 65%; }
+            .split:has(.panel--dark:hover)  .panel--light { height: 35%; }
+            .split:has(.panel--light:hover) .panel--light { height: 65%; }
+            .split:has(.panel--light:hover) .panel--dark  { height: 35%; }
+            .divider { width: 100%; height: 2px; top: 50%; left: 0; transform: translateY(-50%); }
+            .split:has(.panel--dark:hover)  .divider { top: 65%; left: 0; }
+            .split:has(.panel--light:hover) .divider { top: 35%; left: 0; }
+            .divider { background: linear-gradient(to right, transparent, rgba(255,255,255,.5), transparent); }
+            .panel-content { padding: 0 32px 40px; }
+            .panel--light .panel-content { padding: 0 32px 40px; align-items: flex-start; text-align: left; }
+            .panel-title { font-size: 2.8rem; }
+            .panel--light .panel-desc { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Уход со страницы -->
+    <div id="pageOut"></div>
+
+    <div class="split">
+
+        <!-- ── ТЁМНАЯ ПАНЕЛЬ ── -->
+        <div class="panel panel--dark" id="panelDark">
+            <!-- Частицы -->
+            <div class="particles" id="particlesDark"></div>
+
+            <!-- Контент при наведении -->
+            <div class="panel-content">
+                <span class="panel-tag">Классика · Надёжность</span>
+                <h2 class="panel-title">Чёрный<br>Карбон</h2>
+                <p class="panel-desc">Эталонный углеродный композит. Абсолютная прочность, нулевая компромиссность — от кокпита болида до корпуса спутника.</p>
+                <a href="tech2.html" class="panel-cta nav-link">
+                    Исследовать технологию
+                    <span class="panel-cta-arrow">→</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ── РАЗДЕЛИТЕЛЬ ── -->
+        <div class="divider">
+            <div class="divider-label">
+                <div class="divider-pill">
+                    <span class="divider-pill-label">выберите</span>
+                    <span class="divider-pill-text">Материал</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ЦЕНТРАЛЬНЫЙ БЛОК ВЫБОРА ── -->
+        <!-- ── СВЕТЛАЯ ПАНЕЛЬ ── -->
+        <div class="panel panel--light" id="panelLight">
+            <!-- Частицы -->
+            <div class="particles" id="particlesLight"></div>
+
+            <!-- Контент при наведении -->
+            <div class="panel-content">
+                <span class="panel-tag">Инновация · Люкс</span>
+                <h2 class="panel-title">Белый<br>Карбон</h2>
+                <p class="panel-desc">Уникальная светлая эстетика при тех же аэрокосмических характеристиках. Материал haute couture и суперкаров нового поколения.</p>
+                <a href="tech2_1.html" class="panel-cta nav-link">
+                    Исследовать технологию
+                    <span class="panel-cta-arrow">→</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ── ПОДПИСЬ АВТОРА ── -->
+        <div class="creator">
+            <p class="creator-name">Горный университет</p>
+            <p class="creator-sub">Кафедра системного анализа и управления · 2026</p>
+        </div>
+
+    </div>
+
+    <script>
+    /* ---- Particles ---- */
+
+    function spawnParticles(container, count) {
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 3 + 1.5;
+            p.style.cssText = `
+                width:${size}px; height:${size}px;
+                left:${Math.random()*100}%;
+                bottom:${Math.random()*30}%;
+                --dx:${(Math.random()-0.5)*60}px;
+                animation-duration:${3 + Math.random()*5}s;
+                animation-delay:${Math.random()*6}s;
+            `;
+            container.appendChild(p);
+        }
+    }
+    spawnParticles(document.getElementById('particlesDark'),  18);
+    spawnParticles(document.getElementById('particlesLight'), 18);
+
+    /* ---- Page transition ---- */
+    const overlay = document.getElementById('pageOut');
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', e => {
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#')) return;
+            e.preventDefault();
+
+            // Colour of overlay matches destination
+            overlay.style.background = href.includes('tech2_1') ? '#fff' : '#000';
+            overlay.classList.add('visible');
+            setTimeout(() => { window.location.href = href; }, 1150);
+        });
+    });
+    </script>
+
+</body>
+</html>
